@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Okulandisa Bié - Compre e venda no Bié</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #f6f6f2; color: #222; }
+  header { background: #1b5e20; color: #fff; padding: 18px 20px; text-align: center; }
+  header h1 { font-size: 28px; }
+  header p { font-size: 14px; opacity: .9; margin-top: 4px; }
+  nav { background: #fff; padding: 10px; text-align: center; position: sticky; top: 0; box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+  nav button { margin: 4px; padding: 8px 14px; border: 1px solid #1b5e20; background: #fff; color: #1b5e20; border-radius: 20px; cursor: pointer; font-size: 14px; }
+  nav button.ativo { background: #1b5e20; color: #fff; }
+  .pesquisa { text-align: center; padding: 14px; }
+  .pesquisa input { width: 90%; max-width: 420px; padding: 10px; border: 1px solid #bbb; border-radius: 8px; font-size: 15px; }
+  .grelha { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; padding: 16px; max-width: 1100px; margin: 0 auto; }
+  .cartao { background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 5px rgba(0,0,0,.12); display: flex; flex-direction: column; }
+  .cartao .foto { height: 150px; background: #c8e6c9; display: flex; align-items: center; justify-content: center; font-size: 48px; }
+  .cartao .foto img { width: 100%; height: 100%; object-fit: cover; }
+  .cartao .info { padding: 12px; flex: 1; }
+  .cartao h3 { font-size: 16px; margin-bottom: 4px; }
+  .cartao .preco { color: #1b5e20; font-weight: bold; margin: 6px 0; }
+  .cartao .vendedor { font-size: 13px; color: #666; }
+  .cartao a { display: block; text-align: center; background: #25d366; color: #fff; text-decoration: none; padding: 10px; font-weight: bold; }
+  .tag { display: inline-block; font-size: 11px; background: #e8f5e9; color: #1b5e20; padding: 2px 8px; border-radius: 10px; margin-bottom: 6px; }
+  .vazio { text-align: center; padding: 30px; color: #777; }
+  .vender { background: #fff; max-width: 700px; margin: 20px auto; padding: 20px; border-radius: 10px; text-align: center; }
+  .vender a { display: inline-block; margin-top: 10px; background: #1b5e20; color: #fff; padding: 10px 18px; border-radius: 8px; text-decoration: none; }
+  footer { text-align: center; padding: 20px; font-size: 13px; color: #666; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Okulandisa Bié</h1>
+  <p>Okulandisa quer dizer vender. Produtos e imóveis dos empreendedores do Bié.</p>
+</header>
+
+<nav id="menu"></nav>
+
+<div class="pesquisa">
+  <input type="text" id="busca" placeholder="Pesquisar produtos, casas, vendedores...">
+</div>
+
+<div class="grelha" id="lista"></div>
+
+<div class="vender">
+  <h2>Quer vender na Okulandisa Bié?</h2>
+  <p>Envie-nos uma mensagem com a foto, o nome e o preço do seu produto ou imóvel.</p>
+  <a id="linkVender" href="#" target="_blank">Quero anunciar</a>
+</div>
+
+<footer>
+  &copy; Okulandisa Bié - Cuito, Bié, Angola
+</footer>
+
+<script>
+  // EDITAR: o seu número de WhatsApp, com 244 à frente e sem espaços nem sinal de mais
+  const WHATSAPP_PLATAFORMA = "244900000000";
+
+  // EDITAR: lista de anúncios. Cada anúncio tem uma categoria, um nome, um preço,
+  // o vendedor, o número de WhatsApp do vendedor, um emoji e, se quiser, o endereço de uma foto.
+  const anuncios = [
+    { categoria: "Comestíveis", nome: "Mel puro do Bié (1 litro)", preco: "4.500 Kz", vendedor: "Mel da Terra", whatsapp: "244900000001", emoji: "🍯", foto: "" },
+    { categoria: "Comestíveis", nome: "Fuba de milho (saco 25 kg)", preco: "12.000 Kz", vendedor: "Agro Camacupa", whatsapp: "244900000002", emoji: "🌽", foto: "" },
+    { categoria: "Roupas", nome: "Vestido de capulana", preco: "15.000 Kz", vendedor: "Moda Cuito", whatsapp: "244900000003", emoji: "👗", foto: "" },
+    { categoria: "Calçados", nome: "Sapatilhas desportivas", preco: "18.000 Kz", vendedor: "Calçado Bié", whatsapp: "244900000004", emoji: "👟", foto: "" },
+    { categoria: "Imóveis", nome: "Casa T3 para arrendar - Cuito", preco: "150.000 Kz/mês", vendedor: "Imobiliária Planalto", whatsapp: "244900000005", emoji: "🏠", foto: "" },
+    { categoria: "Imóveis", nome: "Quarto individual - perto do ISCED", preco: "35.000 Kz/mês", vendedor: "Particular", whatsapp: "244900000006", emoji: "🛏️", foto: "" }
+  ];
+
+  const categorias = ["Todos", "Comestíveis", "Roupas", "Calçados", "Imóveis"];
+  let categoriaAtual = "Todos";
+
+  const menu = document.getElementById("menu");
+  const lista = document.getElementById("lista");
+  const busca = document.getElementById("busca");
+
+  function criarMenu() {
+    menu.innerHTML = "";
+    categorias.forEach(function (c) {
+      const b = document.createElement("button");
+      b.textContent = c;
+      if (c === categoriaAtual) b.className = "ativo";
+      b.onclick = function () { categoriaAtual = c; criarMenu(); mostrar(); };
+      menu.appendChild(b);
+    });
+  }
+
+  function mostrar() {
+    const texto = busca.value.toLowerCase();
+    const filtrados = anuncios.filter(function (a) {
+      const bateCategoria = categoriaAtual === "Todos" || a.categoria === categoriaAtual;
+      const bateTexto = (a.nome + " " + a.vendedor + " " + a.categoria).toLowerCase().includes(texto);
+      return bateCategoria && bateTexto;
+    });
+
+    lista.innerHTML = "";
+    if (filtrados.length === 0) {
+      lista.innerHTML = '<p class="vazio">Nenhum anúncio encontrado.</p>';
+      return;
+    }
+
+    filtrados.forEach(function (a) {
+      const msg = encodeURIComponent("Olá! Vi o anúncio \"" + a.nome + "\" na Okulandisa Bié e tenho interesse.");
+      const cartao = document.createElement("div");
+      cartao.className = "cartao";
+      cartao.innerHTML =
+        '<div class="foto">' + (a.foto ? '<img src="' + a.foto + '" alt="' + a.nome + '">' : a.emoji) + '</div>' +
+        '<div class="info">' +
+          '<span class="tag">' + a.categoria + '</span>' +
+          '<h3>' + a.nome + '</h3>' +
+          '<div class="preco">' + a.preco + '</div>' +
+          '<div class="vendedor">Vendedor: ' + a.vendedor + '</div>' +
+        '</div>' +
+        '<a href="https://wa.me/' + a.whatsapp + '?text=' + msg + '" target="_blank">Contactar vendedor</a>';
+      lista.appendChild(cartao);
+    });
+  }
+
+  busca.addEventListener("input", mostrar);
+  document.getElementById("linkVender").href =
+    "https://wa.me/" + WHATSAPP_PLATAFORMA + "?text=" + encodeURIComponent("Olá! Quero anunciar na Okulandisa Bié.");
+
+  criarMenu();
+  mostrar();
+</script>
+
+</body>
+</html>
